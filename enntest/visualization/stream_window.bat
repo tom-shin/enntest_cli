@@ -1,0 +1,1 @@
+python -m PyQt5.uic.pyuic -x stream_window.ui -o stream_window.py
