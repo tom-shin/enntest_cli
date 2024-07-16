@@ -507,18 +507,24 @@ if __name__ == "__main__":
     port = 63522  # SSH 포트
     username = "sam"  # SSH 사용자 이름
     password = "Thunder$@88"  # SSH 비밀번호
-    device = "000012b58f246013"
+    device = "000011b5ceac6013"
 
     ssh_test = exynos()
     ssh_test.connect(username, password)
 
     ssh_test.devices()
 
-    device = "000012b58f246013"
-    cmd = "EnnTest_v2_service"
-    model = r"C:\Work\tom\Project\AI_Application_Servie_Team\ExynosTestTool\enntest\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc"
-    input = r"C:\Work\tom\Project\AI_Application_Servie_Team\ExynosTestTool\enntest\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
-    gold = r"C:\Work\tom\Project\AI_Application_Servie_Team\ExynosTestTool\enntest\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    cmd =  "EnnTest_v2_lib"   #"EnnTest_v2_service"
+
+    
+    model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc\Mobilenet_Edgetpu_O2_Multicore.nnc"
+    input = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
+    gold = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
     option = "--profile summary --iter 3"
     result_file = ssh_test.analyze(device=device, exe_cmd=cmd, nnc_model=model, input_binary=input, golden_binary=gold,
                                    option=option)
+    
+    ssh_test.show(result_file)
