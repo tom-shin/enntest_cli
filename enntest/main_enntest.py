@@ -9,6 +9,7 @@ import time
 import paramiko
 import re
 from tqdm import tqdm
+import logging
 import socket
 import stat
 import multiprocessing
@@ -17,8 +18,15 @@ import pkg_resources
 
 from enntest.visualization.graph_main import graph_view
 
-
 ############################################################################################################
+
+logging.basicConfig(level=logging.CRITICAL)
+
+
+def PRINT_(args):
+    # pass
+    print(args)
+    # logging.info(args)
 
 
 def auto_str_args(func):
@@ -108,21 +116,21 @@ class exynos:
                                 "horizon view\n                    >> False: vertical view"
             }
         }
-        print("\n[Usage: instance.method(...)]")
+        PRINT_("\n[Usage: instance.method(...)]")
         for keys, value_s in method_prototypes.items():
-            print(Fore.GREEN + rf"{keys}")
+            PRINT_(Fore.GREEN + rf"{keys}")
             for key, value in value_s.items():
-                print(Fore.CYAN + rf"  - {key}: {Fore.WHITE}{value}")
-            print(Style.RESET_ALL + "\n")
+                PRINT_(Fore.CYAN + rf"  - {key}: {Fore.WHITE}{value}")
+            PRINT_(Style.RESET_ALL + "\n")
 
     def quit(self):
         if self.ssh:
-            print("Closing previous connection.")
+            PRINT_("Closing previous connection.")
             self.ssh.close()
             self.ssh = None
-            print("Quit Successfully")
+            PRINT_("Quit Successfully")
         else:
-            print("Already disconnected or no connection")
+            PRINT_("Already disconnected or no connection")
 
     @staticmethod
     def _normalize_path(user_input_path):
@@ -144,7 +152,7 @@ class exynos:
             error = stderr.read().decode()
             return output, error
         except Exception as e:
-            print(f"An error occurred: {e}")
+            PRINT_(f"An error occurred: {e}")
             return None, str(e)
 
     def _ensure_remote_dir_exists(self, remote_dir):
@@ -164,25 +172,25 @@ class exynos:
                         else:
                             sftp.remove(file_path)
                     except IOError as e:
-                        print(f"An error occurred while removing file {file_path}: {e}")
+                        PRINT_(f"An error occurred while removing file {file_path}: {e}")
                 sftp.rmdir(path)
             except Exception as e:
-                print(f"An error occurred while removing directory {path}: {e}")
+                PRINT_(f"An error occurred while removing directory {path}: {e}")
 
         try:
             sftp.stat(remote_dir)
-            # print(f"Directory {remote_dir} already exists. Removing it.")
+            # PRINT_(f"Directory {remote_dir} already exists. Removing it.")
             remove_dir(sftp, remote_dir)
         except FileNotFoundError:
-            print("")
+            PRINT_("")
         except Exception as e:
-            print(f"An error occurred: {e}")
+            PRINT_(f"An error occurred: {e}")
 
         try:
             sftp.mkdir(remote_dir)
-            # print(f"Directory {remote_dir} created.")
+            # PRINT_(f"Directory {remote_dir} created.")
         except Exception as e:
-            print(f"Failed to create directory {remote_dir}: {e}")
+            PRINT_(f"Failed to create directory {remote_dir}: {e}")
         finally:
             sftp.close()
 
@@ -193,20 +201,20 @@ class exynos:
             self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.ssh.connect(hostname=self.server_ip, port=self.port, username=username, password=password,
                              timeout=timeout)
-            print(f"Successfully connected to the server.")
+            PRINT_(f"Successfully connected to the server.")
             return True
 
         except paramiko.AuthenticationException:
-            print("Authentication failed")
+            PRINT_("Authentication failed")
         except paramiko.SSHException as sshException:
-            print(f"SSH error: {sshException}")
+            PRINT_(f"SSH error: {sshException}")
         except socket.timeout:
-            print("Connection timed out")
+            PRINT_("Connection timed out")
         except Exception as e:
-            print(f"Other error: {e}")
+            PRINT_(f"Other error: {e}")
 
         if self.ssh:
-            # print("Closing previous connection.")
+            # PRINT_("Closing previous connection.")
             self.ssh.close()
             self.ssh = None
 
@@ -240,7 +248,7 @@ class exynos:
     def _upload2server(self, src_path, remote_directory="/tmp/enntest"):
 
         if not self.ssh:
-            print("No SSH connection. Upload aborted.")
+            PRINT_("No SSH connection. Upload aborted.")
             return False
 
         dest_path = ""
@@ -264,13 +272,13 @@ class exynos:
             sftp.close()
             return True, dest_path
         except Exception as e:
-            print(f"Fail to upload: {e}")
+            PRINT_(f"Fail to upload: {e}")
             return False, None
 
     def _download_from_server(self, dst_path, remote_directory="/tmp/enntest"):
 
         if not self.ssh:
-            print("No SSH connection. Download aborted.")
+            PRINT_("No SSH connection. Download aborted.")
             return None
 
         try:
@@ -298,16 +306,16 @@ class exynos:
             download_dir(sftp, remote_directory, dst_path)
 
             sftp.close()
-            print(f"Successfully downloaded {remote_directory} to {dst_path}")
+            PRINT_(f"Successfully downloaded {remote_directory} to {dst_path}")
             return None
         except Exception as e:
-            print(f"Failed to download: {e}")
+            PRINT_(f"Failed to download: {e}")
             return None
 
     def _device_root_remount(self, device=''):
 
         if len(device) == 0:
-            print("No Device Selected")
+            PRINT_("No Device Selected")
             return
 
         cmds = [
@@ -316,8 +324,8 @@ class exynos:
         ]
         for cmd in cmds:
             output, error = self.__execute_command(command=cmd)
-            print(cmd)
-            print(output)
+            PRINT_(cmd)
+            PRINT_(output)
 
     def _adb_pull_overwrite(self, local_path, remote_path, device_id, root_remount=False):
 
@@ -330,8 +338,8 @@ class exynos:
 
         for cmd in cmds:
             output, error = self.__execute_command(command=cmd)
-            print(cmd)
-            print(output)
+            PRINT_(cmd)
+            PRINT_(output)
 
     def _adb_push_overwrite(self, local_path, remote_path, device_id, root_remount=False):
 
@@ -345,13 +353,13 @@ class exynos:
 
         for cmd in cmds:
             output, error = self.__execute_command(command=cmd)
-            print(cmd)
-            print(output)
+            PRINT_(cmd)
+            PRINT_(output)
 
     def devices(self):
 
         if not self.ssh:
-            print("No SSH connection.")
+            PRINT_("No SSH connection.")
             return
 
         cmd = "adb devices"
@@ -360,26 +368,26 @@ class exynos:
         error = stderr.read().decode()
 
         if error:
-            print("Devices Error:", error)
+            PRINT_("Devices Error:", error)
 
-        print(output)
+        PRINT_(output)
 
     def upload(self, device, src_path, dst_path, root_remount=False):
 
         if not self.ssh:
-            print("No SSH connection.")
+            PRINT_("No SSH connection.")
             return
 
         result, path = self._upload2server(src_path=src_path, remote_directory=self.remote_directory)
         if result:
             self._adb_push_overwrite(local_path=path, remote_path=dst_path, device_id=device, root_remount=root_remount)
         else:
-            print("Upload Fail")
+            PRINT_("Upload Fail")
 
     def download(self, device, src_path, dst_path, root_remount=False):
 
         if not self.ssh:
-            print("No SSH connection.")
+            PRINT_("No SSH connection.")
             return
 
         src_path = self._normalize_path(user_input_path=src_path)
@@ -392,7 +400,7 @@ class exynos:
     def connect(self, username, password, timeout=30):
 
         if self.ssh:
-            # print("Closing previous connection.")
+            # PRINT_("Closing previous connection.")
             self.ssh.close()
             self.ssh = None
 
@@ -407,7 +415,7 @@ class exynos:
                 threshold=0.0001, option=''):
 
         if not self.ssh:
-            print("No SSH connection.")
+            PRINT_("No SSH connection.")
             return
 
         nnc_model = self._normalize_path(user_input_path=nnc_model)
@@ -416,23 +424,23 @@ class exynos:
         result_dir = self._normalize_path(user_input_path=result_dir)
 
         if not self.ssh:
-            print("No SSH connection. Model upload aborted.")
+            PRINT_("No SSH connection. Model upload aborted.")
             return False
 
         if device == '':
-            print("No selected device")
+            PRINT_("No selected device")
             return False
         elif nnc_model == '':
-            print("No selected nnc model")
+            PRINT_("No selected nnc model")
             return False
         elif input_binary == '':
-            print("No selected input_binary")
+            PRINT_("No selected input_binary")
             return False
         elif golden_binary == '':
-            print("No selected golden_binary")
+            PRINT_("No selected golden_binary")
             return False
         elif exe_cmd == '':
-            print("No EnnTest Command")
+            PRINT_("No EnnTest Command")
             return False
 
         self._device_root_remount(device=device)
@@ -440,7 +448,7 @@ class exynos:
         """ 선택한 device 정상 상태인지 확인 """
         output, error = self.__execute_command(command=rf"adb -s {device} get-state")
         if "device" not in output:
-            print(f"device is not available state: {output}")
+            PRINT_(f"device is not available state: {output}")
             return False
 
         self._enntest_library_binary_push(device=device, nnc_model=nnc_model, input_binary=input_binary,
@@ -451,12 +459,17 @@ class exynos:
         golden_binary = os.path.basename(golden_binary)
 
         test_cmd = f'adb -s {device} shell "cd {self.enntest_cmd_dir}; {exe_cmd} --model {nnc_model} --input {input_binary} --golden {golden_binary} {option}"'
-        print(f"Executing: {test_cmd}\n")
+        PRINT_(f"Executing: {test_cmd}\n")
         enntest_result, enntest_error = self.__execute_command(command=test_cmd)
         if enntest_result:
-            print(f"Test Result:\n{enntest_result}")
+            print(
+                f"\n\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+            print(f"{enntest_result}")
+            print(
+                f"\n\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+
         if enntest_error:
-            print(f"Error:\n{enntest_error}")
+            PRINT_(f"Error:\n{enntest_error}")
             return False
 
         formatted_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
@@ -474,21 +487,21 @@ class exynos:
             with open(local_output_path, "w") as result_file:
                 result_file.write(cleaned_result)
 
-        # print("++++++++++++++++++++++++++++++", local_output_path)
+        # PRINT_("++++++++++++++++++++++++++++++", local_output_path)
         return local_output_path  # full local path to save generated output.json file
 
     @auto_str_args
     def show(self, result_file, direction=False):
 
         if not self.ssh:
-            print("No SSH connection.")
+            PRINT_("No SSH connection.")
             return
 
         enn_result_file = str(result_file)
         enn_result_file = self._normalize_path(user_input_path=enn_result_file)
 
         if not os.path.isfile(enn_result_file):
-            print(f"{enn_result_file}: File Not Found")
+            PRINT_(f"{enn_result_file}: File Not Found")
             return False
 
         self.process = multiprocessing.Process(
@@ -514,17 +527,15 @@ if __name__ == "__main__":
 
     ssh_test.devices()
 
-
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    cmd =  "EnnTest_v2_lib"   #"EnnTest_v2_service"
+    cmd = "EnnTest_v2_lib"  # "EnnTest_v2_service"
 
-    
-    model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc\Mobilenet_Edgetpu_O2_Multicore.nnc"
-    input = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
-    gold = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
+    model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc"
+    input_ = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
+    gold = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
     option = "--profile summary --iter 3"
-    result_file = ssh_test.analyze(device=device, exe_cmd=cmd, nnc_model=model, input_binary=input, golden_binary=gold,
+    result_file = ssh_test.analyze(device=device, exe_cmd=cmd, nnc_model=model, input_binary=input_, golden_binary=gold,
                                    option=option)
-    
-    ssh_test.show(result_file)
+
+    # ssh_test.show(result_file)
