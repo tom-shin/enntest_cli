@@ -410,6 +410,34 @@ class exynos:
             # Ensure the remote directory exists
             self._ensure_remote_dir_exists(self.remote_directory)
 
+    def remove_all(self, device):
+        
+        if not self.ssh:
+            PRINT_("No SSH connection.")
+            return
+    
+        output, error = self.__execute_command(command=rf"adb -s {device} get-state")
+        if "device" not in output:
+            PRINT_(f"device is not available state: {output}")
+            return
+
+        # remove all cmd binary            
+        output, error = self.__execute_command(command=rf"adb -s {device} shell 'rm -rf {self.enntest_execution_bin}/EnnTest*'")
+        if output:
+            PRINT_(f"{output}")
+
+        if error:
+            PRINT_(f"Error:\n{error}")
+        
+        # remove all nnc, golden, input binary
+        output, error = self.__execute_command(command=rf"adb -s {device} shell 'rm -rf {self.enntest_cmd_dir}/*'")
+        if output:
+            PRINT_(f"{output}")
+
+        if error:
+            PRINT_(f"Error:\n{error}")
+        
+
     @auto_str_args
     def analyze(self, device, exe_cmd, nnc_model, input_binary, golden_binary, result_dir='',
                 threshold=0.0001, option=''):
@@ -526,16 +554,18 @@ if __name__ == "__main__":
     ssh_test.connect(username, password)
 
     ssh_test.devices()
+    ssh_test.remove_all(device=device)
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    cmd = "EnnTest_v2_lib"  # "EnnTest_v2_service"
+    cmd = "EnnTest_v2_service"
+    option = "--profile summary --iter 3"
 
     model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc"
     input_ = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
     gold = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
-    option = "--profile summary --iter 3"
+    
     result_file = ssh_test.analyze(device=device, exe_cmd=cmd, nnc_model=model, input_binary=input_, golden_binary=gold,
                                    option=option)
 
-    # ssh_test.show(result_file)
+    ssh_test.show(result_file)
