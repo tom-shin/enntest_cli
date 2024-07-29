@@ -559,7 +559,7 @@ if __name__ == "__main__":
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     cmd = "EnnTest_v2_service"
-    option = "--profile summary --iter 3"
+    option = "--profile summary --monitor_iter 3 --iter 3 --useSNR"
 
     model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc"
     input_ = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
