@@ -146,7 +146,12 @@ class exynos:
     def __execute_command(self, command):
 
         try:
-            stdin, stdout, stderr = self.ssh.exec_command(command)
+
+            cmd = command.replace("adb", rf"/home/sam/platform-tools/adb")
+            stdin, stdout, stderr = self.ssh.exec_command(cmd)
+
+            # stdin, stdout, stderr = self.ssh.exec_command(command)
+
             stdout.channel.recv_exit_status()  # Wait for the command to complete
             output = stdout.read().decode()
             error = stderr.read().decode()
@@ -362,13 +367,15 @@ class exynos:
             PRINT_("No SSH connection.")
             return
 
-        cmd = "adb devices"
+        command = "adb devices"
+        cmd = command.replace("adb", rf"/home/sam/platform-tools/adb")
+
         stdin, stdout, stderr = self.ssh.exec_command(cmd)
         output = stdout.read().decode()
         error = stderr.read().decode()
 
         if error:
-            PRINT_("Devices Error:", error)
+            PRINT_(rf"Devices Error:{error}")
 
         PRINT_(output)
 
@@ -415,14 +422,15 @@ class exynos:
         if not self.ssh:
             PRINT_("No SSH connection.")
             return
-    
-        output, error = self.__execute_command(command=rf"adb -s {device} get-state")
-        if "device" not in output:
-            PRINT_(f"device is not available state: {output}")
-            return
+
+        # output, error = self.__execute_command(command=rf"adb -s {device} get-state")
+        # if "device" not in output:
+        #     PRINT_(f"device is not available state: {output}")
+        #     return
 
         # remove all cmd binary            
-        output, error = self.__execute_command(command=rf"adb -s {device} shell 'rm -rf {self.enntest_execution_bin}/EnnTest*'")
+        output, error = self.__execute_command(
+            command=rf"adb -s {device} shell 'rm -rf {self.enntest_execution_bin}/EnnTest*'")
         if output:
             PRINT_(f"{output}")
 
@@ -474,10 +482,10 @@ class exynos:
         self._device_root_remount(device=device)
 
         """ 선택한 device 정상 상태인지 확인 """
-        output, error = self.__execute_command(command=rf"adb -s {device} get-state")
-        if "device" not in output:
-            PRINT_(f"device is not available state: {output}")
-            return False
+        # output, error = self.__execute_command(command=rf"adb -s {device} get-state")
+        # if "device" not in output:
+        #     PRINT_(f"device is not available state: {output}")
+        #     return False
 
         self._enntest_library_binary_push(device=device, nnc_model=nnc_model, input_binary=input_binary,
                                           golden_binary=golden_binary)
@@ -548,7 +556,7 @@ if __name__ == "__main__":
     port = 63522  # SSH 포트
     username = "sam"  # SSH 사용자 이름
     password = "Thunder$@88"  # SSH 비밀번호
-    device = "000011b5ceac6013"
+    device = "0000100d8e38c0e0"
 
     ssh_test = exynos()
     ssh_test.connect(username, password)
@@ -558,13 +566,16 @@ if __name__ == "__main__":
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    cmd = "EnnTest_v2_service"
+    cmd = "EnnTest_v2_lib"
     option = "--profile summary --monitor_iter 3 --iter 3 --useSNR"
 
-    model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc"
-    input_ = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
-    gold = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
-    
+    # model = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore.nnc"
+    # input_ = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_input_data.bin"
+    # gold = rf"{BASE_DIR}\nnc-model-tester\sample_model\NPU_EdgeTPU\Mobilenet_Edgetpu_O2_Multicore_golden_data.bin"
+
+    model = r"C:\Work\tom\python_project\exynos_ai_studio_verifier\ai_studio_2_x\평가 결과 모음\11.16일 평가\Ver2.0\logs_org\resnet18-v1-7\Compiler_result\resnet18-v1-7_simplify_O2_SingleCore.nnc"
+    input_ = r"C:\Work\tom\python_project\exynos_ai_studio_verifier\ai_studio_2_x\평가 결과 모음\11.16일 평가\Ver2.0\logs_org\resnet18-v1-7\Converter_result\NPU_resnet18-v1-7\testvector\inout\input_data_float32.bin"
+    gold = r"C:\Work\tom\python_project\exynos_ai_studio_verifier\ai_studio_2_x\평가 결과 모음\11.16일 평가\Ver2.0\logs_org\resnet18-v1-7\Converter_result\NPU_resnet18-v1-7\testvector\inout\golden_data_float32.bin"
     result_file = ssh_test.analyze(device=device, exe_cmd=cmd, nnc_model=model, input_binary=input_, golden_binary=gold,
                                    option=option)
 
